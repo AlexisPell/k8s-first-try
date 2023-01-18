@@ -1,0 +1,63 @@
+# # We may have separate files for Deployment and $
+# # But its a common practice to keep them together
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webapp-deployment
+  labels:
+    app: webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webapp
+  template:
+    metadata:
+      labels:
+        # key app may be anything
+        app: webapp
+    spec:
+      containers:
+        # name is just a name of the container
+        - name: webapp
+          # Docker image (current is from dockerhub)
+          image: nanajanashia/k8s-demo-app:v1.0
+          ports:
+            - containerPort: 3000
+          env:
+            - name: USER_NAME
+              valueFrom:
+                secretKeyRef:
+                  # This is 'my-mongo-secret-pointer'
+                  name: mongo-secret
+                  key: mongo-user
+            - name: USER_PWD
+              valueFrom:
+                secretKeyRef:
+                  # This is 'my-mongo-secret-pointer'
+                  name: mongo-secret
+                  key: mongo-password
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  # This is 'my-mongo-config-pointer'
+                  name: mongo-config
+                  key: mongo-url
+# Three dashes let us have different yaml configurations
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # This is 'my-mongo-key-pointer'
+  name: webapp-service
+spec:
+  type: NodePort
+  selector:
+    app: webapp
+  ports:
+    - protocol: TCP
+      # incoming port
+      port: 3000
+      # proxying to which port
+      targetPort: 3000
+      nodePort: 30100

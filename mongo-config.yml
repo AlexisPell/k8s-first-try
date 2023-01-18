@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mongo-config
+data:
+  # This is 'my-mongo-config-pointer'
+  mongo-url: mongo-service

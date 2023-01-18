@@ -1,0 +1,55 @@
+# # We may have separate files for Deployment and $
+# # But its a common practice to keep them together
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-deployment
+  labels:
+    app: mongo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo
+  template:
+    metadata:
+      labels:
+        # key app may be anything
+        app: mongo
+    spec:
+      containers:
+        # name is just a name of the container
+        - name: mongodb
+          # Docker image (current is from dockerhub)
+          image: mongo:5.0
+          ports:
+            - containerPort: 27017
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  # This is 'my-mongo-secret-pointer'
+                  name: mongo-secret
+                  key: mongo-user
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  # This is 'my-mongo-secret-pointer'
+                  name: mongo-secret
+                  key: mongo-password
+# Three dashes let us have different yaml configurations
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # This is 'my-mongo-config-pointer'
+  name: mongo-service
+spec:
+  selector:
+    app: mongo
+  ports:
+    - protocol: TCP
+      # incoming port
+      port: 27017
+      # proxying to which port
+      targetPort: 27017
